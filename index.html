@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 우리반 점심시간 DJ 신청곡 시스템</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 아이콘 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QR Code 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Google Fonts (Noto Sans KR & Gaegu) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .font-gaegu {
+            font-family: 'Gaegu', cursive;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-amber-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- 헤더 영역 -->
+    <header class="bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-white p-2 rounded-full text-orange-500 shadow-md">
+                    <i class="fa-solid font-bold fa-compact-disc text-2xl animate-spin" style="animation-duration: 8s;"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-black tracking-tight font-gaegu leading-none text-yellow-100">신나는 점심시간 음악 신청실</h1>
+                </div>
+            </div>
+            <!-- 모드 전환 버튼 -->
+            <div class="flex gap-2">
+                <a href="#request-section" class="px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl transition bg-white text-orange-600 shadow-md flex items-center gap-1">
+                    <i class="fa-solid fa-pen-to-square"></i> 신청하기
+                </a>
+                <button onclick="showQrModal()" class="px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl transition bg-orange-600 text-white hover:bg-orange-700 shadow-md flex items-center gap-1">
+                    <i class="fa-solid fa-qrcode"></i> QR 보기
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto w-full flex-grow p-4 sm:p-6 space-y-6">
+
+        <!-- 안내 전광판 -->
+        <div class="bg-gradient-to-br from-yellow-300 to-amber-400 p-4 sm:p-6 rounded-3xl shadow-xl border-4 border-yellow-200 relative overflow-hidden">
+            <div class="absolute -right-4 -bottom-4 text-amber-500/20 text-9xl font-black select-none pointer-events-none">
+                <i class="fa-solid fa-music"></i>
+            </div>
+            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <!-- ON AIR / OFF AIR 방송 상태 태그 -->
+                    <div id="broadcast-status-badge" class="inline-block bg-orange-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-2 shadow-sm transition-all">
+                        📢 오늘 점심 DJ 알림
+                    </div>
+                    <h2 id="broadcast-status-subtext" class="text-2xl sm:text-3xl font-bold font-gaegu text-amber-950 mb-1 leading-snug">
+                        듣고 싶은 노래가 있나요?<br>사연과 함께 바로 신청해 보세요!
+                    </h2>
+                </div>
+
+                <!-- DJ 휴가권 관리 박스 -->
+                <div class="bg-white/90 backdrop-blur p-3.5 rounded-2xl border-2 border-amber-300 shadow-md text-amber-950 flex-shrink-0 min-w-[220px]">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-extrabold flex items-center gap-1 text-orange-700">
+                            <i class="fa-solid fa-umbrella-beach"></i> 이번 달 DJ 휴가권
+                        </span>
+                        <span id="vacation-count" class="text-xs font-bold bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">3 / 3 회 남음</span>
+                    </div>
+                    <div class="flex justify-between items-center gap-1 mt-2">
+                        <div id="vacation-dots" class="flex gap-1.5">
+                            <!-- JS로 휴가 스탬프 표시 -->
+                        </div>
+                        <div class="flex gap-1">
+                            <button id="btn-toggle-vacation" onclick="toggleVacationToday()" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold rounded-lg transition shadow-sm" title="오늘 휴가 설정/해제">
+                                오늘 휴가 사용
+                            </button>
+                            <button onclick="resetVacation()" class="px-1.5 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-[11px] font-bold rounded-lg transition" title="월별 3회 리셋">
+                                <i class="fa-solid fa-rotate-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p id="vacation-status-msg" class="text-[11px] text-gray-500 mt-1 font-medium text-center">
+                        ※ 오늘은 신나는 자유 음악 시간!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DJ 휴가 중 상태 알림 대형 배너 (오늘 휴가 사용 시 노출) -->
+        <div id="vacation-banner" class="hidden bg-gradient-to-r from-teal-500 via-emerald-500 to-sky-500 text-white p-5 sm:p-6 rounded-3xl shadow-xl border-4 border-teal-200 animate-pulse">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-full flex items-center justify-center text-3xl sm:text-4xl text-yellow-300 flex-shrink-0 shadow-inner">
+                        <i class="fa-solid fa-umbrella-beach"></i>
+                    </div>
+                    <div>
+                        <div class="inline-flex items-center gap-1.5 bg-yellow-300 text-teal-900 text-xs font-black px-2.5 py-0.5 rounded-full mb-1">
+                            <i class="fa-solid fa-mug-hot"></i> OFF AIR • DJ 휴가 중
+                        </div>
+                        <h3 class="text-2xl sm:text-3xl font-black font-gaegu text-white">오늘은 DJ 휴가날이에요! 🌴</h3>
+                        <p class="text-xs sm:text-sm text-teal-50 font-medium">오늘은 DJ 학생도 신나게 밥을 먹는 날입니다. 자유 음악/자동 플레이리스트를 이용해 주세요!</p>
+                    </div>
+                </div>
+                <button onclick="toggleVacationToday()" class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold backdrop-blur transition border border-white/40 flex-shrink-0">
+                    <i class="fa-solid fa-toggle-on mr-1"></i> 휴가 모드 해제
+                </button>
+            </div>
+        </div>
+
+        <!-- 1. 신청곡 작성 폼 -->
+        <div id="request-section" class="bg-white p-5 sm:p-8 rounded-3xl shadow-lg border border-orange-100 relative">
+            <!-- 휴가 중 폼 비활성화 안합 안내 레이어 (필요 시 표출) -->
+            <div id="vacation-form-overlay" class="hidden absolute inset-0 bg-white/80 backdrop-blur-[2px] z-20 rounded-3xl flex flex-col items-center justify-center p-6 text-center">
+                <div class="w-14 h-14 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-2xl mb-3">
+                    <i class="fa-solid fa-umbrella-beach"></i>
+                </div>
+                <h4 class="text-xl font-bold text-gray-800 font-gaegu mb-1">오늘은 DJ 휴가 중입니다!</h4>
+                <p class="text-xs text-gray-600 max-w-md">DJ 학생이 휴가 중이더라도 신청곡을 미리 제출해둘 수 있어요.<br>제출된 곡은 다음 방송 때 차례대로 들려드립니다 🎧</p>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2 border-b pb-3 border-gray-100">
+                <span class="bg-orange-100 text-orange-600 p-2 rounded-xl text-lg">📝</span> 
+                신청곡 작성하기
+            </h3>
+
+            <form id="songForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- 이름/번호 -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1" for="studentName">
+                            신청인 (이름 또는 번호) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="studentName" required placeholder="예: 3번 홍길동 / 익명 가능"
+                            class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 transition text-sm bg-gray-50 focus:bg-white">
+                    </div>
+                    <!-- 곡 제목 -->
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1" for="songTitle">
+                            노래 제목 <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="songTitle" required placeholder="예: Supernova"
+                            class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 transition text-sm bg-gray-50 focus:bg-white">
+                    </div>
+                </div>
+
+                <!-- 가수 이름 -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1" for="artist">
+                        가수 이름 (선택)
+                    </label>
+                    <input type="text" id="artist" placeholder="예: 에스파 (aespa)"
+                        class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 transition text-sm bg-gray-50 focus:bg-white">
+                </div>
+
+                <!-- 신청 사연 -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1" for="message">
+                        DJ에게 전달할 사연 (선택)
+                    </label>
+                    <textarea id="message" rows="2" placeholder="예: 생일 축하해 친구야! / 공부할 때 들으면 힘나는 노래에요."
+                        class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 transition text-sm bg-gray-50 focus:bg-white resize-none"></textarea>
+                </div>
+
+                <!-- 제출 버튼 -->
+                <button type="submit" 
+                    class="w-full py-4 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-bold text-lg rounded-2xl shadow-lg hover:shadow-xl transform active:scale-95 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> 신청곡 보낼게요!
+                </button>
+            </form>
+        </div>
+
+        <!-- 2. DJ 점심 방송 신청곡 목록 -->
+        <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-lg border border-orange-100">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-6 border-b pb-4 border-gray-100">
+                <div>
+                    <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse mr-1">
+                        ON AIR
+                    </span>
+                    <h3 class="text-xl font-bold text-gray-800 inline-flex items-center gap-2">
+                        🎧 오늘의 신청곡 대기열 (<span id="song-count" class="text-orange-600">0</span>곡)
+                    </h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="renderSongs()" class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl font-bold transition flex items-center gap-1">
+                        <i class="fa-solid fa-arrows-rotate"></i> 새로고침
+                    </button>
+                    <button onclick="clearAllDataConfirm()" class="text-xs px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold transition flex items-center gap-1">
+                        <i class="fa-solid fa-trash-can"></i> 전체 리셋
+                    </button>
+                </div>
+            </div>
+
+            <!-- 신청곡 목록 -->
+            <div id="song-list" class="space-y-3">
+                <!-- Dynamic rendering -->
+            </div>
+        </div>
+    </main>
+
+    <!-- QR 코드 모달 -->
+    <div id="modal-qr" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center space-y-5 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-qrcode text-orange-500 mr-2"></i>신청 페이지 QR 코드</h3>
+                <button onclick="closeQrModal()" class="text-gray-400 hover:text-gray-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-xs text-gray-500">학생들이 스마트폰이나 태블릿 카메라로 QR 코드를 스캔하면 바로 신청할 수 있습니다.</p>
+            
+            <div class="bg-white p-4 inline-block border-2 border-dashed border-orange-300 rounded-2xl shadow-inner">
+                <div id="qrcode" class="flex justify-center"></div>
+            </div>
+
+            <button onclick="closeQrModal()" class="w-full py-3 bg-gray-800 hover:bg-gray-900 text-white font-bold rounded-2xl transition text-sm">
+                닫기
+            </button>
+        </div>
+    </div>
+
+    <!-- 푸터 -->
+    <footer class="bg-amber-100 border-t border-amber-200 py-4 text-center text-xs text-amber-800">
+        <p>📻 우리반 즐거운 점심시간 DJ 방송 시스템 | 행복한 교실 만들기</p>
+    </footer>
+
+    <script>
+        let songList = [];
+        let djVacation = {
+            total: 3,
+            used: 0,
+            isVacationToday: false // 오늘 휴가 여부 상태
+        };
+
+        // 페이지 로드 시 초기화
+        window.onload = function () {
+            loadSongData();
+            loadVacationData();
+            renderSongs();
+            renderVacationUI();
+            initQrCode();
+        };
+
+        // --- 휴가 데이터 동기화 ---
+        function loadVacationData() {
+            const saved = localStorage.getItem('dj_vacation_data');
+            if (saved) {
+                try {
+                    djVacation = JSON.parse(saved);
+                    if (djVacation.isVacationToday === undefined) {
+                        djVacation.isVacationToday = false;
+                    }
+                } catch(e) {
+                    djVacation = { total: 3, used: 0, isVacationToday: false };
+                }
+            }
+        }
+
+        function saveVacationData() {
+            localStorage.setItem('dj_vacation_data', JSON.stringify(djVacation));
+        }
+
+        // 오늘 휴가 사용 / 해제 토글
+        function toggleVacationToday() {
+            if (!djVacation.isVacationToday) {
+                // 휴가 시작
+                if (djVacation.used < djVacation.total) {
+                    djVacation.used += 1;
+                    djVacation.isVacationToday = true;
+                    saveVacationData();
+                    renderVacationUI();
+                    showNotification(`🏖️ 오늘은 DJ 휴가날로 설정되었습니다! (남은 휴가: ${djVacation.total - djVacation.used}회)`);
+                } else {
+                    showNotification('⚠️ 이번 달 DJ 휴가권을 모두 사용했습니다!');
+                }
+            } else {
+                // 휴가 종료/취소
+                djVacation.isVacationToday = false;
+                saveVacationData();
+                renderVacationUI();
+                showNotification('🎧 DJ 휴가 모드가 해제되어 다시 방송을 시작합니다!');
+            }
+        }
+
+        function resetVacation() {
+            djVacation.used = 0;
+            djVacation.isVacationToday = false;
+            saveVacationData();
+            renderVacationUI();
+            showNotification('🔄 DJ 휴가권이 매월 3회로 리셋되었습니다!');
+        }
+
+        function renderVacationUI() {
+            const countEl = document.getElementById('vacation-count');
+            const dotsEl = document.getElementById('vacation-dots');
+            const msgEl = document.getElementById('vacation-status-msg');
+            const vacationBanner = document.getElementById('vacation-banner');
+            const statusBadge = document.getElementById('broadcast-status-badge');
+            const statusSubtext = document.getElementById('broadcast-status-subtext');
+            const btnVacation = document.getElementById('btn-toggle-vacation');
+
+            const remaining = djVacation.total - djVacation.used;
+            countEl.textContent = `${remaining} / ${djVacation.total} 회 남음`;
+
+            let dotsHtml = '';
+            for (let i = 0; i < djVacation.total; i++) {
+                if (i < djVacation.used) {
+                    dotsHtml += `<span class="text-gray-300 text-base" title="사용함"><i class="fa-solid fa-umbrella-beach"></i></span>`;
+                } else {
+                    dotsHtml += `<span class="text-orange-500 text-base" title="보유 중"><i class="fa-solid fa-umbrella-beach"></i></span>`;
+                }
+            }
+            dotsEl.innerHTML = dotsHtml;
+
+            // 휴가 중 상태 시 화면 표출 변경
+            if (djVacation.isVacationToday) {
+                vacationBanner.classList.remove('hidden');
+                statusBadge.className = "inline-block bg-teal-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-2 shadow-sm transition-all animate-pulse";
+                statusBadge.innerHTML = '🏖️ OFF AIR • 오늘 DJ 휴가 중';
+                statusSubtext.innerHTML = '오늘은 DJ가 휴가 중입니다!<br>자유 방송을 즐겨주세요.';
+                btnVacation.textContent = "휴가 해제";
+                btnVacation.className = "px-2 py-1 bg-teal-600 hover:bg-teal-700 text-white text-[11px] font-bold rounded-lg transition shadow-sm";
+                msgEl.textContent = "🌴 오늘은 DJ 휴가 날입니다!";
+            } else {
+                vacationBanner.classList.add('hidden');
+                statusBadge.className = "inline-block bg-orange-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-2 shadow-sm transition-all";
+                statusBadge.innerHTML = '📢 오늘 점심 DJ 알림';
+                statusSubtext.innerHTML = '듣고 싶은 노래가 있나요?<br>사연과 함께 바로 신청해 보세요!';
+                btnVacation.textContent = "오늘 휴가 사용";
+                btnVacation.className = "px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold rounded-lg transition shadow-sm";
+                
+                if (djVacation.used > 0 && djVacation.used === djVacation.total) {
+                    msgEl.textContent = "🌴 이번 달 휴가를 모두 사용했습니다!";
+                } else if (djVacation.used > 0) {
+                    msgEl.textContent = `🌴 이번 달 휴가 ${djVacation.used}회 사용함`;
+                } else {
+                    msgEl.textContent = "※ 오늘은 신나는 DJ 방송 날!";
+                }
+            }
+        }
+
+        // --- 로컬 스토리지 데이터 동기화 ---
+        function loadSongData() {
+            const saved = localStorage.getItem('dj_song_list');
+            if (saved) {
+                try {
+                    songList = JSON.parse(saved);
+                } catch(e) {
+                    songList = [];
+                }
+            } else {
+                // 샘플 데이터
+                songList = [
+                    {
+                        id: 'demo-1',
+                        name: '5번 김철수',
+                        title: 'Supernova',
+                        artist: 'aespa',
+                        message: '오늘 점심 맛있게 먹자 얘들아!',
+                        time: new Date(Date.now() - 1000 * 60 * 15).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                        played: false
+                    },
+                    {
+                        id: 'demo-2',
+                        name: '12번 이영희',
+                        title: 'Spot!',
+                        artist: '지코 (ZICO)',
+                        message: '점심 먹고 축구할 사람 모여라~',
+                        time: new Date(Date.now() - 1000 * 60 * 30).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                        played: true
+                    }
+                ];
+                saveSongData();
+            }
+        }
+
+        function saveSongData() {
+            localStorage.setItem('dj_song_list', JSON.stringify(songList));
+        }
+
+        // --- 신청서 제출 ---
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            const nameInput = document.getElementById('studentName');
+            const titleInput = document.getElementById('songTitle');
+            const artistInput = document.getElementById('artist');
+            const messageInput = document.getElementById('message');
+
+            const newSong = {
+                id: 'song_' + Date.now(),
+                name: nameInput.value.trim(),
+                title: titleInput.value.trim(),
+                artist: artistInput.value.trim() || '가수 미지정',
+                message: messageInput.value.trim() || '신청 사연이 없습니다.',
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                played: false
+            };
+
+            songList.unshift(newSong); // 최신 곡을 맨 앞에 추가
+            saveSongData();
+
+            // 폼 초기화
+            titleInput.value = '';
+            artistInput.value = '';
+            messageInput.value = '';
+
+            showNotification('🎉 신청곡이 DJ 목록에 추가되었습니다!');
+            renderSongs();
+        }
+
+        // --- 신청 리스트 통합 렌더링 ---
+        function renderSongs() {
+            loadSongData();
+            const container = document.getElementById('song-list');
+            const countEl = document.getElementById('song-count');
+            countEl.textContent = songList.length;
+
+            if (songList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-gray-400">
+                        <i class="fa-solid fa-music text-4xl mb-2"></i>
+                        <p class="text-sm">아직 신청된 노래가 없어요.<br>위 폼에서 첫 번째 곡을 신청해 보세요!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = songList.map((song, index) => {
+                // 순번은 아래서부터 또는 위에서부터 계산 (1번부터 표시)
+                const queueNum = songList.length - index;
+
+                return `
+                <div class="p-4 rounded-2xl ${song.played ? 'bg-emerald-50/60 border border-emerald-200 opacity-75' : 'bg-orange-50/60 border border-orange-100'} transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div class="flex items-start sm:items-center gap-3 w-full sm:w-auto min-w-0">
+                        <!-- 대기열 순번 배지 -->
+                        <div class="flex-shrink-0 w-8 h-8 rounded-full ${song.played ? 'bg-emerald-200 text-emerald-800' : 'bg-orange-500 text-white'} font-black text-sm flex items-center justify-center shadow-sm">
+                            ${queueNum}
+                        </div>
+
+                        <div class="space-y-1 min-w-0 flex-grow">
+                            <div class="flex items-center gap-2 flex-wrap text-xs">
+                                <span class="px-2 py-0.5 font-bold rounded-md ${song.played ? 'bg-emerald-200 text-emerald-800' : 'bg-amber-200 text-amber-900'}">
+                                    ${song.played ? '재생 완료' : '대기 중'}
+                                </span>
+                                <span class="font-bold text-gray-700"><i class="fa-solid fa-user text-gray-400 mr-1"></i>${escapeHtml(song.name)}</span>
+                                <span class="text-gray-400">(${song.time})</span>
+                            </div>
+                            <h4 class="text-base sm:text-lg font-extrabold text-gray-900 ${song.played ? 'line-through text-gray-500' : ''} truncate">
+                                ${escapeHtml(song.title)} <span class="text-sm font-semibold text-gray-600"> - ${escapeHtml(song.artist)}</span>
+                            </h4>
+                            <p class="text-xs text-gray-600 bg-white/70 p-2 rounded-xl border border-gray-100 italic">
+                                💬 "${escapeHtml(song.message)}"
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 제어 버튼 (제목 복사, 재생완료 토글, 삭제) -->
+                    <div class="flex items-center gap-1.5 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-0 border-gray-100 flex-shrink-0">
+                        <button onclick="copyToClipboard('${escapeHtml(song.title)} - ${escapeHtml(song.artist)}')" 
+                            class="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shadow-sm" title="제목과 가수 복사">
+                            <i class="fa-solid fa-copy"></i> 복사
+                        </button>
+                        <button onclick="toggleSongStatus('${song.id}')" 
+                            class="px-3 py-1.5 ${song.played ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-emerald-500 text-white hover:bg-emerald-600'} text-xs font-bold rounded-xl transition flex items-center gap-1 shadow-sm">
+                            <i class="fa-solid ${song.played ? 'fa-rotate-left' : 'fa-check'}"></i> 
+                            ${song.played ? '취소' : '완료'}
+                        </button>
+                        <button onclick="deleteSong('${song.id}')" 
+                            class="p-1.5 bg-gray-100 hover:bg-red-100 text-gray-400 hover:text-red-600 text-xs rounded-xl transition" title="삭제">
+                            <i class="fa-solid fa-trash-can px-1"></i>
+                        </button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // --- 제어 기능 ---
+        function copyToClipboard(text) {
+            // textarea 요소를 임시 생성하여 복사 실행
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                showNotification(`📋 "${text}" 복사 완료!`);
+            } catch (err) {
+                showNotification('복사에 실패했습니다.');
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        function toggleSongStatus(id) {
+            songList = songList.map(song => {
+                if (song.id === id) {
+                    return { ...song, played: !song.played };
+                }
+                return song;
+            });
+            saveSongData();
+            renderSongs();
+        }
+
+        function deleteSong(id) {
+            songList = songList.filter(song => song.id !== id);
+            saveSongData();
+            renderSongs();
+        }
+
+        function clearAllDataConfirm() {
+            if (songList.length === 0) return;
+            songList = [];
+            saveSongData();
+            renderSongs();
+            showNotification('신청 목록이 초기화되었습니다.');
+        }
+
+        // --- QR 코드 생성 ---
+        function initQrCode() {
+            const currentUrl = window.location.href;
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            
+            new QRCode(qrContainer, {
+                text: currentUrl,
+                width: 180,
+                height: 180,
+                colorDark : "#d97706",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+
+        function showQrModal() {
+            initQrCode();
+            document.getElementById('modal-qr').classList.remove('hidden');
+        }
+
+        function closeQrModal() {
+            document.getElementById('modal-qr').classList.add('hidden');
+        }
+
+        // --- 유틸리티 ---
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function showNotification(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 right-6 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl z-50 text-xs sm:text-sm font-bold flex items-center gap-2 animate-bounce';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 text-base"></i> ${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
