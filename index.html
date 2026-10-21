@@ -232,23 +232,12 @@
     </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-    const SUPABASE_URL = 'https://shjqogxgursrimlrsvrj.supabase.co
-';
-    const SUPABASE_KEY = 'sb_publishable_PkThC9FMiDxuZB0F1Mptbw_hIsMFcOB';
-
-    const supabase = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-    );
-</script>
     <!-- 자바스크립트 스크립트 -->
     <script>
        
 /* ===== Supabase 연결 ===== */
-const SUPABASE_URL = '여기에_프로젝트_URL';
-const SUPABASE_KEY = '여기에_PUBLISHABLE_KEY';
+const SUPABASE_URL = 'https://shjqogxgursrimlrsvrj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_PkThC9FMiDxuZB0F1Mptbw_hIsMFcOB';
 
 const db = window.supabase.createClient(
   SUPABASE_URL,
@@ -335,55 +324,8 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 
-        // 신청서 제출
+        // 신청서 제출: Supabase에 저장
         window.handleFormSubmit = async function(event) {
-    event.preventDefault();
-
-    const nameInput = document.getElementById('studentName');
-    const titleInput = document.getElementById('songTitle');
-    const artistInput = document.getElementById('artist');
-    const messageInput = document.getElementById('message');
-
-    const newSong = {
-        id: 'song_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-        name: nameInput.value.trim(),
-        title: titleInput.value.trim(),
-        artist: artistInput.value.trim() || '가수 미지정',
-        message: messageInput.value.trim() || '신청 사연이 없습니다.',
-        time: new Date().toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit'
-        }),
-        played: false,
-        createdAt: Date.now()
-    };
-
-    const { error } = await supabase.from('songs').insert({
-        id: newSong.id,
-        name: newSong.name,
-        title: newSong.title,
-        artist: newSong.artist,
-        message: newSong.message,
-        time: newSong.time,
-        played: newSong.played,
-        created_at: newSong.createdAt
-    });
-
-    if (error) {
-        console.error(error);
-        showNotification('신청곡 저장에 실패했습니다.');
-        return;
-    }
-
-    songList.unshift(newSong);
-    renderSongs();
-
-    titleInput.value = '';
-    artistInput.value = '';
-    messageInput.value = '';
-
-    showNotification('🎉 신청곡이 등록되었습니다!');
-}; = function(event) {
             event.preventDefault();
 
             const nameInput = document.getElementById('studentName');
@@ -397,102 +339,99 @@ window.addEventListener('DOMContentLoaded', () => {
                 title: titleInput.value.trim(),
                 artist: artistInput.value.trim() || '가수 미지정',
                 message: messageInput.value.trim() || '신청 사연이 없습니다.',
-                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 played: false,
                 createdAt: Date.now()
             };
 
-            songList.unshift(newSong); // 최신곡을 제일 위로
-            saveDataAndBroadcast();
+            const { error } = await db.from('songs').insert({
+                id: newSong.id,
+                name: newSong.name,
+                title: newSong.title,
+                artist: newSong.artist,
+                message: newSong.message,
+                time: newSong.time,
+                played: newSong.played,
+                created_at: newSong.createdAt
+            });
 
+            if (error) {
+                console.error('신청곡 저장 실패:', error);
+                showNotification('신청곡 저장에 실패했습니다.');
+                return;
+            }
+
+            nameInput.value = '';
             titleInput.value = '';
             artistInput.value = '';
             messageInput.value = '';
-            showNotification('🎉 신청곡이 대기열에 바로 등록되었습니다!');
+
+            await reloadLocalData();
+            showNotification('🎉 신청곡이 등록되었습니다!');
         };
 
+        // 재생 완료 상태를 Supabase에 저장
         window.toggleSongStatus = async function(id) {
-    const song = songList.find(s => s.id === id);
-    if (!song) return;
+            const song = songList.find(s => s.id === id);
+            if (!song) return;
 
-    const newStatus = !song.played;
+            const newStatus = !song.played;
+            const { error } = await db
+                .from('songs')
+                .update({ played: newStatus })
+                .eq('id', id);
 
-    const { error } = await supabase
-        .from('songs')
-        .update({ played: newStatus })
-        .eq('id', id);
-
-    if (error) {
-        console.error(error);
-        showNotification('상태 변경에 실패했습니다.');
-        return;
-    }
-
-    song.played = newStatus;
-    renderSongs();
-}; = function(id) {
-            const index = songList.findIndex(s => s.id === id);
-            if (index !== -1) {
-                songList[index].played = !songList[index].played;
-                saveDataAndBroadcast();
+            if (error) {
+                console.error('신청곡 상태 변경 실패:', error);
+                showNotification('상태 변경에 실패했습니다.');
+                return;
             }
+
+            await reloadLocalData();
         };
 
+        // 신청곡을 Supabase에서 삭제
         window.deleteSong = async function(id) {
-    if (!confirm('이 신청곡을 삭제할까요?')) return;
+            if (!confirm('이 신청곡을 삭제할까요?')) return;
 
-    const { error } = await supabase
-        .from('songs')
-        .delete()
-        .eq('id', id);
+            const { error } = await db
+                .from('songs')
+                .delete()
+                .eq('id', id);
 
-    if (error) {
-        console.error(error);
-        showNotification('신청곡 삭제에 실패했습니다.');
-        return;
-    }
+            if (error) {
+                console.error('신청곡 삭제 실패:', error);
+                showNotification('신청곡 삭제에 실패했습니다.');
+                return;
+            }
 
-    songList = songList.filter(s => s.id !== id);
-    renderSongs();
-
-    showNotification('신청곡이 삭제되었습니다.');
-}; = function(id) {
-            songList = songList.filter(s => s.id !== id);
-            saveDataAndBroadcast();
+            await reloadLocalData();
             showNotification('신청곡이 삭제되었습니다.');
         };
 
-        
-window.clearAllDataConfirm = async function() {
-  if (songList.length === 0) return;
-
-  if (!confirm('정말로 모든 신청곡 목록을 전체 초기화하시겠습니까?')) {
-    return;
-  }
-
-  // 현재 공개 정책에서는 모든 신청곡을 삭제할 수 있음
-  const { error } = await db
-    .from('songs')
-    .delete()
-    .not('id', 'is', null);
-
-  if (error) {
-    console.error(error);
-    showNotification('전체 초기화에 실패했습니다.');
-    return;
-  }
-
-  await reloadLocalData();
-  showNotification('모든 신청곡이 초기화되었습니다.');
-};
- = function() {
+        // 전체 신청곡 초기화
+        window.clearAllDataConfirm = async function() {
             if (songList.length === 0) return;
-            if (confirm('정말로 모든 신청곡 목록을 전체 초기화하시겠습니까?')) {
-                songList = [];
-                saveDataAndBroadcast();
-                showNotification('모든 신청곡이 초기화되었습니다.');
+
+            if (!confirm('정말로 모든 신청곡 목록을 전체 초기화하시겠습니까?')) {
+                return;
             }
+
+            const { error } = await db
+                .from('songs')
+                .delete()
+                .not('id', 'is', null);
+
+            if (error) {
+                console.error('전체 초기화 실패:', error);
+                showNotification('전체 초기화에 실패했습니다.');
+                return;
+            }
+
+            await reloadLocalData();
+            showNotification('모든 신청곡이 초기화되었습니다.');
         };
+
 
         // --- DJ 휴가 관리 ---
         window.toggleVacationToday = function() {
