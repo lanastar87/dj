@@ -231,55 +231,159 @@
         <p>📻 우리반 즐거운 점심시간 DJ 방송 시스템 | 행복한 교실 만들기</p>
     </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+    const SUPABASE_URL = 'https://shjqogxgursrimlrsvrj.supabase.co
+';
+    const SUPABASE_KEY = 'sb_publishable_PkThC9FMiDxuZB0F1Mptbw_hIsMFcOB';
+
+    const supabase = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+</script>
     <!-- 자바스크립트 스크립트 -->
     <script>
-        // 로컬 데이터 및 동기화 채널 관리
-        let songList = JSON.parse(localStorage.getItem('classroom_dj_songs') || '[]');
-        let djVacation = JSON.parse(localStorage.getItem('classroom_dj_vacation') || '{"total":3,"used":0,"isVacationToday":false}');
+       
+/* ===== Supabase 연결 ===== */
+const SUPABASE_URL = '여기에_프로젝트_URL';
+const SUPABASE_KEY = '여기에_PUBLISHABLE_KEY';
 
-        // 브라우저 탭/창 간 실시간 동기화용 채널
-        const broadcastChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('classroom_dj_channel') : null;
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
-        if (broadcastChannel) {
-            broadcastChannel.onmessage = (event) => {
-                if (event.data === 'sync') {
-                    reloadLocalData();
-                }
-            };
-        }
+/* ===== 신청곡 및 DJ 휴가 상태 ===== */
+let songList = [];
 
-        // 다른 탭에서 변경사항 있을 시 자동 감지
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'classroom_dj_songs' || e.key === 'classroom_dj_vacation') {
-                reloadLocalData();
-            }
-        });
+let djVacation = JSON.parse(
+  localStorage.getItem('classroom_dj_vacation') ||
+  '{"total":3,"used":0,"isVacationToday":false}'
+);
 
-        function reloadLocalData() {
-            songList = JSON.parse(localStorage.getItem('classroom_dj_songs') || '[]');
-            djVacation = JSON.parse(localStorage.getItem('classroom_dj_vacation') || '{"total":3,"used":0,"isVacationToday":false}');
-            renderSongs();
-            renderVacationUI();
-        }
+/* ===== 서버에서 신청곡 불러오기 ===== */
+async function reloadLocalData() {
+  // 휴가 상태는 기존처럼 이 기기에 저장
+  djVacation = JSON.parse(
+    localStorage.getItem('classroom_dj_vacation') ||
+    '{"total":3,"used":0,"isVacationToday":false}'
+  );
 
-        function saveDataAndBroadcast() {
-            localStorage.setItem('classroom_dj_songs', JSON.stringify(songList));
-            localStorage.setItem('classroom_dj_vacation', JSON.stringify(djVacation));
-            if (broadcastChannel) {
-                broadcastChannel.postMessage('sync');
-            }
-            renderSongs();
-            renderVacationUI();
-        }
+  const { data, error } = await db
+    .from('songs')
+    .select('*')
+    .order('created_at', { ascending: false });
 
-        // 초기화
-        window.addEventListener('DOMContentLoaded', () => {
-            reloadLocalData();
-            initQrCode();
-        });
+  if (error) {
+    console.error('신청곡 불러오기 실패:', error);
+    showNotification('신청곡을 불러오지 못했습니다.');
+    renderVacationUI();
+    return;
+  }
+
+  // DB 필드명을 기존 화면 코드에 맞춰 변환
+  songList = data.map(song => ({
+    id: song.id,
+    name: song.name,
+    title: song.title,
+    artist: song.artist,
+    message: song.message,
+    time: song.time,
+    played: song.played,
+    createdAt: song.created_at
+  }));
+
+  renderSongs();
+  renderVacationUI();
+}
+
+/* ===== DJ 휴가 상태는 기존 방식으로 저장 ===== */
+function saveDataAndBroadcast() {
+  localStorage.setItem(
+    'classroom_dj_vacation',
+    JSON.stringify(djVacation)
+  );
+  renderVacationUI();
+}
+
+/* ===== 다른 휴대폰의 DB 변경 감지 ===== */
+db
+  .channel('classroom-dj-live-songs')
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'songs'
+    },
+    () => {
+      reloadLocalData();
+    }
+  )
+  .subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      reloadLocalData();
+    }
+  });
+
+/* ===== 페이지 초기화 ===== */
+window.addEventListener('DOMContentLoaded', () => {
+  reloadLocalData();
+  initQrCode();
+});
+
 
         // 신청서 제출
-        window.handleFormSubmit = function(event) {
+        window.handleFormSubmit = async function(event) {
+    event.preventDefault();
+
+    const nameInput = document.getElementById('studentName');
+    const titleInput = document.getElementById('songTitle');
+    const artistInput = document.getElementById('artist');
+    const messageInput = document.getElementById('message');
+
+    const newSong = {
+        id: 'song_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        name: nameInput.value.trim(),
+        title: titleInput.value.trim(),
+        artist: artistInput.value.trim() || '가수 미지정',
+        message: messageInput.value.trim() || '신청 사연이 없습니다.',
+        time: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+        }),
+        played: false,
+        createdAt: Date.now()
+    };
+
+    const { error } = await supabase.from('songs').insert({
+        id: newSong.id,
+        name: newSong.name,
+        title: newSong.title,
+        artist: newSong.artist,
+        message: newSong.message,
+        time: newSong.time,
+        played: newSong.played,
+        created_at: newSong.createdAt
+    });
+
+    if (error) {
+        console.error(error);
+        showNotification('신청곡 저장에 실패했습니다.');
+        return;
+    }
+
+    songList.unshift(newSong);
+    renderSongs();
+
+    titleInput.value = '';
+    artistInput.value = '';
+    messageInput.value = '';
+
+    showNotification('🎉 신청곡이 등록되었습니다!');
+}; = function(event) {
             event.preventDefault();
 
             const nameInput = document.getElementById('studentName');
@@ -307,7 +411,26 @@
             showNotification('🎉 신청곡이 대기열에 바로 등록되었습니다!');
         };
 
-        window.toggleSongStatus = function(id) {
+        window.toggleSongStatus = async function(id) {
+    const song = songList.find(s => s.id === id);
+    if (!song) return;
+
+    const newStatus = !song.played;
+
+    const { error } = await supabase
+        .from('songs')
+        .update({ played: newStatus })
+        .eq('id', id);
+
+    if (error) {
+        console.error(error);
+        showNotification('상태 변경에 실패했습니다.');
+        return;
+    }
+
+    song.played = newStatus;
+    renderSongs();
+}; = function(id) {
             const index = songList.findIndex(s => s.id === id);
             if (index !== -1) {
                 songList[index].played = !songList[index].played;
@@ -315,13 +438,54 @@
             }
         };
 
-        window.deleteSong = function(id) {
+        window.deleteSong = async function(id) {
+    if (!confirm('이 신청곡을 삭제할까요?')) return;
+
+    const { error } = await supabase
+        .from('songs')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error(error);
+        showNotification('신청곡 삭제에 실패했습니다.');
+        return;
+    }
+
+    songList = songList.filter(s => s.id !== id);
+    renderSongs();
+
+    showNotification('신청곡이 삭제되었습니다.');
+}; = function(id) {
             songList = songList.filter(s => s.id !== id);
             saveDataAndBroadcast();
             showNotification('신청곡이 삭제되었습니다.');
         };
 
-        window.clearAllDataConfirm = function() {
+        
+window.clearAllDataConfirm = async function() {
+  if (songList.length === 0) return;
+
+  if (!confirm('정말로 모든 신청곡 목록을 전체 초기화하시겠습니까?')) {
+    return;
+  }
+
+  // 현재 공개 정책에서는 모든 신청곡을 삭제할 수 있음
+  const { error } = await db
+    .from('songs')
+    .delete()
+    .not('id', 'is', null);
+
+  if (error) {
+    console.error(error);
+    showNotification('전체 초기화에 실패했습니다.');
+    return;
+  }
+
+  await reloadLocalData();
+  showNotification('모든 신청곡이 초기화되었습니다.');
+};
+ = function() {
             if (songList.length === 0) return;
             if (confirm('정말로 모든 신청곡 목록을 전체 초기화하시겠습니까?')) {
                 songList = [];
