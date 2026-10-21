@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 우리반 점심시간 DJ 신청곡 시스템</title>
+    <title>🎵 신나는 점심시간 음악 신청실</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome 아이콘 -->
@@ -53,7 +53,7 @@
                     <h1 class="text-xl sm:text-2xl font-black tracking-tight font-gaegu leading-none text-yellow-100">신나는 점심시간 음악 신청실</h1>
                 </div>
             </div>
-            <!-- 모드 전환 버튼 -->
+            <!-- 버튼 -->
             <div class="flex gap-2">
                 <a href="#request-section" class="px-3 py-1.5 text-xs sm:text-sm font-bold rounded-xl transition bg-white text-orange-600 shadow-md flex items-center gap-1">
                     <i class="fa-solid fa-pen-to-square"></i> 신청하기
@@ -74,7 +74,6 @@
             </div>
             <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <!-- ON AIR / OFF AIR 방송 상태 태그 -->
                     <div id="broadcast-status-badge" class="inline-block bg-orange-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-2 shadow-sm transition-all">
                         📢 오늘 점심 DJ 알림
                     </div>
@@ -93,7 +92,7 @@
                     </div>
                     <div class="flex justify-between items-center gap-1 mt-2">
                         <div id="vacation-dots" class="flex gap-1.5">
-                            <!-- JS로 휴가 스탬프 표시 -->
+                            <!-- JS 스탬프 -->
                         </div>
                         <div class="flex gap-1">
                             <button id="btn-toggle-vacation" onclick="toggleVacationToday()" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold rounded-lg transition shadow-sm" title="오늘 휴가 설정/해제">
@@ -111,7 +110,7 @@
             </div>
         </div>
 
-        <!-- DJ 휴가 중 상태 알림 대형 배너 (오늘 휴가 사용 시 노출) -->
+        <!-- DJ 휴가 중 배너 -->
         <div id="vacation-banner" class="hidden bg-gradient-to-r from-teal-500 via-emerald-500 to-sky-500 text-white p-5 sm:p-6 rounded-3xl shadow-xl border-4 border-teal-200 animate-pulse">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
                 <div class="flex items-center gap-4">
@@ -134,15 +133,6 @@
 
         <!-- 1. 신청곡 작성 폼 -->
         <div id="request-section" class="bg-white p-5 sm:p-8 rounded-3xl shadow-lg border border-orange-100 relative">
-            <!-- 휴가 중 폼 비활성화 안합 안내 레이어 (필요 시 표출) -->
-            <div id="vacation-form-overlay" class="hidden absolute inset-0 bg-white/80 backdrop-blur-[2px] z-20 rounded-3xl flex flex-col items-center justify-center p-6 text-center">
-                <div class="w-14 h-14 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-2xl mb-3">
-                    <i class="fa-solid fa-umbrella-beach"></i>
-                </div>
-                <h4 class="text-xl font-bold text-gray-800 font-gaegu mb-1">오늘은 DJ 휴가 중입니다!</h4>
-                <p class="text-xs text-gray-600 max-w-md">DJ 학생이 휴가 중이더라도 신청곡을 미리 제출해둘 수 있어요.<br>제출된 곡은 다음 방송 때 차례대로 들려드립니다 🎧</p>
-            </div>
-
             <h3 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2 border-b pb-3 border-gray-100">
                 <span class="bg-orange-100 text-orange-600 p-2 rounded-xl text-lg">📝</span> 
                 신청곡 작성하기
@@ -150,7 +140,6 @@
 
             <form id="songForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- 이름/번호 -->
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1" for="studentName">
                             신청인 (이름 또는 번호) <span class="text-red-500">*</span>
@@ -158,7 +147,6 @@
                         <input type="text" id="studentName" required placeholder="예: 3번 홍길동 / 익명 가능"
                             class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 transition text-sm bg-gray-50 focus:bg-white">
                     </div>
-                    <!-- 곡 제목 -->
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1" for="songTitle">
                             노래 제목 <span class="text-red-500">*</span>
@@ -168,7 +156,6 @@
                     </div>
                 </div>
 
-                <!-- 가수 이름 -->
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1" for="artist">
                         가수 이름 (선택)
@@ -177,7 +164,6 @@
                         class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 transition text-sm bg-gray-50 focus:bg-white">
                 </div>
 
-                <!-- 신청 사연 -->
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-1" for="message">
                         DJ에게 전달할 사연 (선택)
@@ -186,8 +172,7 @@
                         class="w-full px-4 py-3 rounded-2xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-400 transition text-sm bg-gray-50 focus:bg-white resize-none"></textarea>
                 </div>
 
-                <!-- 제출 버튼 -->
-                <button type="submit" 
+                <button type="submit" id="submit-btn"
                     class="w-full py-4 bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-bold text-lg rounded-2xl shadow-lg hover:shadow-xl transform active:scale-95 transition flex items-center justify-center gap-2">
                     <i class="fa-solid fa-paper-plane"></i> 신청곡 보낼게요!
                 </button>
@@ -206,9 +191,6 @@
                     </h3>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="renderSongs()" class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl font-bold transition flex items-center gap-1">
-                        <i class="fa-solid fa-arrows-rotate"></i> 새로고침
-                    </button>
                     <button onclick="clearAllDataConfirm()" class="text-xs px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold transition flex items-center gap-1">
                         <i class="fa-solid fa-trash-can"></i> 전체 리셋
                     </button>
@@ -217,7 +199,10 @@
 
             <!-- 신청곡 목록 -->
             <div id="song-list" class="space-y-3">
-                <!-- Dynamic rendering -->
+                <div class="text-center py-8 text-gray-400">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-2 text-orange-400"></i>
+                    <p class="text-sm">실시간 데이터 연결 중입니다...</p>
+                </div>
             </div>
         </div>
     </main>
@@ -246,72 +231,191 @@
         <p>📻 우리반 즐거운 점심시간 DJ 방송 시스템 | 행복한 교실 만들기</p>
     </footer>
 
-    <script>
+    <!-- Firebase SDK 모듈 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase 설정 (기본 공용 설정 또는 내장 환경)
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                apiKey: "AIzaSyD-sample-key",
+                authDomain: "classroom-dj.firebaseapp.com",
+                projectId: "classroom-dj",
+                storageBucket: "classroom-dj.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:abcdef"
+            };
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // 앱 및 데이터베이스 초기화
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
         let songList = [];
-        let djVacation = {
-            total: 3,
-            used: 0,
-            isVacationToday: false // 오늘 휴가 여부 상태
-        };
+        let djVacation = { total: 3, used: 0, isVacationToday: false };
 
-        // 페이지 로드 시 초기화
-        window.onload = function () {
-            loadSongData();
-            loadVacationData();
-            renderSongs();
-            renderVacationUI();
-            initQrCode();
-        };
+        // 경로 설정
+        const songsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'songs');
+        const vacationDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'vacation');
 
-        // --- 휴가 데이터 동기화 ---
-        function loadVacationData() {
-            const saved = localStorage.getItem('dj_vacation_data');
-            if (saved) {
-                try {
-                    djVacation = JSON.parse(saved);
-                    if (djVacation.isVacationToday === undefined) {
-                        djVacation.isVacationToday = false;
-                    }
-                } catch(e) {
+        // 1. 인증 처리
+        window.addEventListener('load', async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.log("익명 로그인 진행 중:", err);
+                try { await signInAnonymously(auth); } catch(e) {}
+            }
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                initRealtimeSync();
+            }
+        });
+
+        // 2. 실시간 데이터 동기화 (Firestore)
+        function initRealtimeSync() {
+            // 신청곡 목록 실시간 수신
+            onSnapshot(songsColRef, (snapshot) => {
+                const songs = [];
+                snapshot.forEach((doc) => {
+                    songs.push({ id: doc.id, ...doc.data() });
+                });
+                // 생성시간 역순 정렬 (최신곡이 위로)
+                songs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                songList = songs;
+                renderSongs();
+            }, (error) => {
+                console.error("신청곡 수신 에러:", error);
+            });
+
+            // 휴가권 정보 실시간 수신
+            onSnapshot(vacationDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    djVacation = docSnap.data();
+                } else {
                     djVacation = { total: 3, used: 0, isVacationToday: false };
                 }
+                renderVacationUI();
+            }, (error) => {
+                console.error("휴가 정보 수신 에러:", error);
+            });
+
+            initQrCode();
+        }
+
+        // --- STREAMING_CHUNK:Defining form submit and song mutation handlers... ---
+        window.handleFormSubmit = async function(event) {
+            event.preventDefault();
+            if (!currentUser) {
+                showNotification('서버에 연결 중입니다. 잠시 후 다시 시도해 주세요.');
+                return;
             }
-        }
 
-        function saveVacationData() {
-            localStorage.setItem('dj_vacation_data', JSON.stringify(djVacation));
-        }
+            const nameInput = document.getElementById('studentName');
+            const titleInput = document.getElementById('songTitle');
+            const artistInput = document.getElementById('artist');
+            const messageInput = document.getElementById('message');
+            const submitBtn = document.getElementById('submit-btn');
 
-        // 오늘 휴가 사용 / 해제 토글
-        function toggleVacationToday() {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 전송 중...`;
+
+            try {
+                await addDoc(songsColRef, {
+                    name: nameInput.value.trim(),
+                    title: titleInput.value.trim(),
+                    artist: artistInput.value.trim() || '가수 미지정',
+                    message: messageInput.value.trim() || '신청 사연이 없습니다.',
+                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                    played: false,
+                    createdAt: Date.now()
+                });
+
+                titleInput.value = '';
+                artistInput.value = '';
+                messageInput.value = '';
+                showNotification('🎉 신청곡이 DJ 컴퓨터로 실시간 전송되었습니다!');
+            } catch (err) {
+                console.error("신청 실패:", err);
+                showNotification('신청 전송 실패. 네트워크 상태를 확인해 주세요.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> 신청곡 보낼게요!`;
+            }
+        };
+
+        window.toggleSongStatus = async function(id) {
+            const target = songList.find(s => s.id === id);
+            if (!target) return;
+            try {
+                const songRef = doc(db, 'artifacts', appId, 'public', 'data', 'songs', id);
+                await updateDoc(songRef, { played: !target.played });
+            } catch (e) {
+                console.error("상태 변경 실패:", e);
+            }
+        };
+
+        window.deleteSong = async function(id) {
+            try {
+                const songRef = doc(db, 'artifacts', appId, 'public', 'data', 'songs', id);
+                await deleteDoc(songRef);
+                showNotification('신청곡이 삭제되었습니다.');
+            } catch (e) {
+                console.error("삭제 실패:", e);
+            }
+        };
+
+        window.clearAllDataConfirm = async function() {
+            if (songList.length === 0) return;
+            if (confirm('정말로 모든 신청곡 목록을 전체 초기화하시겠습니까?')) {
+                try {
+                    const snapshot = await getDocs(songsColRef);
+                    const deletePromises = snapshot.docs.map(d => deleteDoc(d.ref));
+                    await Promise.all(deletePromises);
+                    showNotification('모든 신청곡이 초기화되었습니다.');
+                } catch(e) {
+                    console.error("전체 삭제 실패:", e);
+                }
+            }
+        };
+
+        // --- DJ 휴가 관리 ---
+        window.toggleVacationToday = async function() {
             if (!djVacation.isVacationToday) {
-                // 휴가 시작
                 if (djVacation.used < djVacation.total) {
-                    djVacation.used += 1;
-                    djVacation.isVacationToday = true;
-                    saveVacationData();
-                    renderVacationUI();
-                    showNotification(`🏖️ 오늘은 DJ 휴가날로 설정되었습니다! (남은 휴가: ${djVacation.total - djVacation.used}회)`);
+                    const updated = { ...djVacation, used: djVacation.used + 1, isVacationToday: true };
+                    await setDoc(vacationDocRef, updated);
+                    showNotification(`🏖️ 오늘은 DJ 휴가날로 설정되었습니다!`);
                 } else {
                     showNotification('⚠️ 이번 달 DJ 휴가권을 모두 사용했습니다!');
                 }
             } else {
-                // 휴가 종료/취소
-                djVacation.isVacationToday = false;
-                saveVacationData();
-                renderVacationUI();
+                const updated = { ...djVacation, isVacationToday: false };
+                await setDoc(vacationDocRef, updated);
                 showNotification('🎧 DJ 휴가 모드가 해제되어 다시 방송을 시작합니다!');
             }
-        }
+        };
 
-        function resetVacation() {
-            djVacation.used = 0;
-            djVacation.isVacationToday = false;
-            saveVacationData();
-            renderVacationUI();
+        window.resetVacation = async function() {
+            const updated = { total: 3, used: 0, isVacationToday: false };
+            await setDoc(vacationDocRef, updated);
             showNotification('🔄 DJ 휴가권이 매월 3회로 리셋되었습니다!');
-        }
+        };
 
+        // --- STREAMING_CHUNK:Rendering UI components & dynamic lists... ---
         function renderVacationUI() {
             const countEl = document.getElementById('vacation-count');
             const dotsEl = document.getElementById('vacation-dots');
@@ -334,7 +438,6 @@
             }
             dotsEl.innerHTML = dotsHtml;
 
-            // 휴가 중 상태 시 화면 표출 변경
             if (djVacation.isVacationToday) {
                 vacationBanner.classList.remove('hidden');
                 statusBadge.className = "inline-block bg-teal-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-2 shadow-sm transition-all animate-pulse";
@@ -361,79 +464,7 @@
             }
         }
 
-        // --- 로컬 스토리지 데이터 동기화 ---
-        function loadSongData() {
-            const saved = localStorage.getItem('dj_song_list');
-            if (saved) {
-                try {
-                    songList = JSON.parse(saved);
-                } catch(e) {
-                    songList = [];
-                }
-            } else {
-                // 샘플 데이터
-                songList = [
-                    {
-                        id: 'demo-1',
-                        name: '5번 김철수',
-                        title: 'Supernova',
-                        artist: 'aespa',
-                        message: '오늘 점심 맛있게 먹자 얘들아!',
-                        time: new Date(Date.now() - 1000 * 60 * 15).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                        played: false
-                    },
-                    {
-                        id: 'demo-2',
-                        name: '12번 이영희',
-                        title: 'Spot!',
-                        artist: '지코 (ZICO)',
-                        message: '점심 먹고 축구할 사람 모여라~',
-                        time: new Date(Date.now() - 1000 * 60 * 30).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                        played: true
-                    }
-                ];
-                saveSongData();
-            }
-        }
-
-        function saveSongData() {
-            localStorage.setItem('dj_song_list', JSON.stringify(songList));
-        }
-
-        // --- 신청서 제출 ---
-        function handleFormSubmit(event) {
-            event.preventDefault();
-            
-            const nameInput = document.getElementById('studentName');
-            const titleInput = document.getElementById('songTitle');
-            const artistInput = document.getElementById('artist');
-            const messageInput = document.getElementById('message');
-
-            const newSong = {
-                id: 'song_' + Date.now(),
-                name: nameInput.value.trim(),
-                title: titleInput.value.trim(),
-                artist: artistInput.value.trim() || '가수 미지정',
-                message: messageInput.value.trim() || '신청 사연이 없습니다.',
-                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                played: false
-            };
-
-            songList.unshift(newSong); // 최신 곡을 맨 앞에 추가
-            saveSongData();
-
-            // 폼 초기화
-            titleInput.value = '';
-            artistInput.value = '';
-            messageInput.value = '';
-
-            showNotification('🎉 신청곡이 DJ 목록에 추가되었습니다!');
-            renderSongs();
-        }
-
-        // --- 신청 리스트 통합 렌더링 ---
         function renderSongs() {
-            loadSongData();
             const container = document.getElementById('song-list');
             const countEl = document.getElementById('song-count');
             countEl.textContent = songList.length;
@@ -449,13 +480,11 @@
             }
 
             container.innerHTML = songList.map((song, index) => {
-                // 순번은 아래서부터 또는 위에서부터 계산 (1번부터 표시)
                 const queueNum = songList.length - index;
 
                 return `
                 <div class="p-4 rounded-2xl ${song.played ? 'bg-emerald-50/60 border border-emerald-200 opacity-75' : 'bg-orange-50/60 border border-orange-100'} transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div class="flex items-start sm:items-center gap-3 w-full sm:w-auto min-w-0">
-                        <!-- 대기열 순번 배지 -->
                         <div class="flex-shrink-0 w-8 h-8 rounded-full ${song.played ? 'bg-emerald-200 text-emerald-800' : 'bg-orange-500 text-white'} font-black text-sm flex items-center justify-center shadow-sm">
                             ${queueNum}
                         </div>
@@ -466,7 +495,7 @@
                                     ${song.played ? '재생 완료' : '대기 중'}
                                 </span>
                                 <span class="font-bold text-gray-700"><i class="fa-solid fa-user text-gray-400 mr-1"></i>${escapeHtml(song.name)}</span>
-                                <span class="text-gray-400">(${song.time})</span>
+                                <span class="text-gray-400">(${song.time || ''})</span>
                             </div>
                             <h4 class="text-base sm:text-lg font-extrabold text-gray-900 ${song.played ? 'line-through text-gray-500' : ''} truncate">
                                 ${escapeHtml(song.title)} <span class="text-sm font-semibold text-gray-600"> - ${escapeHtml(song.artist)}</span>
@@ -477,7 +506,6 @@
                         </div>
                     </div>
 
-                    <!-- 제어 버튼 (제목 복사, 재생완료 토글, 삭제) -->
                     <div class="flex items-center gap-1.5 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-0 border-gray-100 flex-shrink-0">
                         <button onclick="copyToClipboard('${escapeHtml(song.title)} - ${escapeHtml(song.artist)}')" 
                             class="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shadow-sm" title="제목과 가수 복사">
@@ -497,14 +525,12 @@
             `}).join('');
         }
 
-        // --- 제어 기능 ---
-        function copyToClipboard(text) {
-            // textarea 요소를 임시 생성하여 복사 실행
+        // --- STREAMING_CHUNK:Defining utility functions & toasts... ---
+        window.copyToClipboard = function(text) {
             const textarea = document.createElement('textarea');
             textarea.value = text;
             document.body.appendChild(textarea);
             textarea.select();
-            
             try {
                 document.execCommand('copy');
                 showNotification(`📋 "${text}" 복사 완료!`);
@@ -513,37 +539,12 @@
             } finally {
                 document.body.removeChild(textarea);
             }
-        }
+        };
 
-        function toggleSongStatus(id) {
-            songList = songList.map(song => {
-                if (song.id === id) {
-                    return { ...song, played: !song.played };
-                }
-                return song;
-            });
-            saveSongData();
-            renderSongs();
-        }
-
-        function deleteSong(id) {
-            songList = songList.filter(song => song.id !== id);
-            saveSongData();
-            renderSongs();
-        }
-
-        function clearAllDataConfirm() {
-            if (songList.length === 0) return;
-            songList = [];
-            saveSongData();
-            renderSongs();
-            showNotification('신청 목록이 초기화되었습니다.');
-        }
-
-        // --- QR 코드 생성 ---
         function initQrCode() {
             const currentUrl = window.location.href;
             const qrContainer = document.getElementById('qrcode');
+            if (!qrContainer) return;
             qrContainer.innerHTML = '';
             
             new QRCode(qrContainer, {
@@ -556,16 +557,15 @@
             });
         }
 
-        function showQrModal() {
+        window.showQrModal = function() {
             initQrCode();
             document.getElementById('modal-qr').classList.remove('hidden');
-        }
+        };
 
-        function closeQrModal() {
+        window.closeQrModal = function() {
             document.getElementById('modal-qr').classList.add('hidden');
-        }
+        };
 
-        // --- 유틸리티 ---
         function escapeHtml(text) {
             if (!text) return '';
             return text
