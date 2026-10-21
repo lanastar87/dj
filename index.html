@@ -201,7 +201,7 @@
             <div id="song-list" class="space-y-3">
                 <div class="text-center py-8 text-gray-400">
                     <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-2 text-orange-400"></i>
-                    <p class="text-sm">실시간 데이터 연결 중입니다...</p>
+                    <p class="text-sm">목록을 불러오는 중입니다...</p>
                 </div>
             </div>
         </div>
@@ -231,191 +231,130 @@
         <p>📻 우리반 즐거운 점심시간 DJ 방송 시스템 | 행복한 교실 만들기</p>
     </footer>
 
-    <!-- Firebase SDK 모듈 -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <!-- 자바스크립트 스크립트 -->
+    <script>
+        // 로컬 데이터 및 동기화 채널 관리
+        let songList = JSON.parse(localStorage.getItem('classroom_dj_songs') || '[]');
+        let djVacation = JSON.parse(localStorage.getItem('classroom_dj_vacation') || '{"total":3,"used":0,"isVacationToday":false}');
 
-        // Firebase 설정 (기본 공용 설정 또는 내장 환경)
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                apiKey: "AIzaSyD-sample-key",
-                authDomain: "classroom-dj.firebaseapp.com",
-                projectId: "classroom-dj",
-                storageBucket: "classroom-dj.appspot.com",
-                messagingSenderId: "123456789",
-                appId: "1:123456789:web:abcdef"
+        // 브라우저 탭/창 간 실시간 동기화용 채널
+        const broadcastChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('classroom_dj_channel') : null;
+
+        if (broadcastChannel) {
+            broadcastChannel.onmessage = (event) => {
+                if (event.data === 'sync') {
+                    reloadLocalData();
+                }
             };
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-        // 앱 및 데이터베이스 초기화
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        let currentUser = null;
-        let songList = [];
-        let djVacation = { total: 3, used: 0, isVacationToday: false };
-
-        // 경로 설정
-        const songsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'songs');
-        const vacationDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'vacation');
-
-        // 1. 인증 처리
-        window.addEventListener('load', async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (err) {
-                console.log("익명 로그인 진행 중:", err);
-                try { await signInAnonymously(auth); } catch(e) {}
-            }
-        });
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                initRealtimeSync();
-            }
-        });
-
-        // 2. 실시간 데이터 동기화 (Firestore)
-        function initRealtimeSync() {
-            // 신청곡 목록 실시간 수신
-            onSnapshot(songsColRef, (snapshot) => {
-                const songs = [];
-                snapshot.forEach((doc) => {
-                    songs.push({ id: doc.id, ...doc.data() });
-                });
-                // 생성시간 역순 정렬 (최신곡이 위로)
-                songs.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-                songList = songs;
-                renderSongs();
-            }, (error) => {
-                console.error("신청곡 수신 에러:", error);
-            });
-
-            // 휴가권 정보 실시간 수신
-            onSnapshot(vacationDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    djVacation = docSnap.data();
-                } else {
-                    djVacation = { total: 3, used: 0, isVacationToday: false };
-                }
-                renderVacationUI();
-            }, (error) => {
-                console.error("휴가 정보 수신 에러:", error);
-            });
-
-            initQrCode();
         }
 
-        // --- STREAMING_CHUNK:Defining form submit and song mutation handlers... ---
-        window.handleFormSubmit = async function(event) {
-            event.preventDefault();
-            if (!currentUser) {
-                showNotification('서버에 연결 중입니다. 잠시 후 다시 시도해 주세요.');
-                return;
+        // 다른 탭에서 변경사항 있을 시 자동 감지
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'classroom_dj_songs' || e.key === 'classroom_dj_vacation') {
+                reloadLocalData();
             }
+        });
+
+        function reloadLocalData() {
+            songList = JSON.parse(localStorage.getItem('classroom_dj_songs') || '[]');
+            djVacation = JSON.parse(localStorage.getItem('classroom_dj_vacation') || '{"total":3,"used":0,"isVacationToday":false}');
+            renderSongs();
+            renderVacationUI();
+        }
+
+        function saveDataAndBroadcast() {
+            localStorage.setItem('classroom_dj_songs', JSON.stringify(songList));
+            localStorage.setItem('classroom_dj_vacation', JSON.stringify(djVacation));
+            if (broadcastChannel) {
+                broadcastChannel.postMessage('sync');
+            }
+            renderSongs();
+            renderVacationUI();
+        }
+
+        // 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            reloadLocalData();
+            initQrCode();
+        });
+
+        // 신청서 제출
+        window.handleFormSubmit = function(event) {
+            event.preventDefault();
 
             const nameInput = document.getElementById('studentName');
             const titleInput = document.getElementById('songTitle');
             const artistInput = document.getElementById('artist');
             const messageInput = document.getElementById('message');
-            const submitBtn = document.getElementById('submit-btn');
 
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 전송 중...`;
+            const newSong = {
+                id: 'song_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                name: nameInput.value.trim(),
+                title: titleInput.value.trim(),
+                artist: artistInput.value.trim() || '가수 미지정',
+                message: messageInput.value.trim() || '신청 사연이 없습니다.',
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                played: false,
+                createdAt: Date.now()
+            };
 
-            try {
-                await addDoc(songsColRef, {
-                    name: nameInput.value.trim(),
-                    title: titleInput.value.trim(),
-                    artist: artistInput.value.trim() || '가수 미지정',
-                    message: messageInput.value.trim() || '신청 사연이 없습니다.',
-                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                    played: false,
-                    createdAt: Date.now()
-                });
+            songList.unshift(newSong); // 최신곡을 제일 위로
+            saveDataAndBroadcast();
 
-                titleInput.value = '';
-                artistInput.value = '';
-                messageInput.value = '';
-                showNotification('🎉 신청곡이 DJ 컴퓨터로 실시간 전송되었습니다!');
-            } catch (err) {
-                console.error("신청 실패:", err);
-                showNotification('신청 전송 실패. 네트워크 상태를 확인해 주세요.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> 신청곡 보낼게요!`;
+            titleInput.value = '';
+            artistInput.value = '';
+            messageInput.value = '';
+            showNotification('🎉 신청곡이 대기열에 바로 등록되었습니다!');
+        };
+
+        window.toggleSongStatus = function(id) {
+            const index = songList.findIndex(s => s.id === id);
+            if (index !== -1) {
+                songList[index].played = !songList[index].played;
+                saveDataAndBroadcast();
             }
         };
 
-        window.toggleSongStatus = async function(id) {
-            const target = songList.find(s => s.id === id);
-            if (!target) return;
-            try {
-                const songRef = doc(db, 'artifacts', appId, 'public', 'data', 'songs', id);
-                await updateDoc(songRef, { played: !target.played });
-            } catch (e) {
-                console.error("상태 변경 실패:", e);
-            }
+        window.deleteSong = function(id) {
+            songList = songList.filter(s => s.id !== id);
+            saveDataAndBroadcast();
+            showNotification('신청곡이 삭제되었습니다.');
         };
 
-        window.deleteSong = async function(id) {
-            try {
-                const songRef = doc(db, 'artifacts', appId, 'public', 'data', 'songs', id);
-                await deleteDoc(songRef);
-                showNotification('신청곡이 삭제되었습니다.');
-            } catch (e) {
-                console.error("삭제 실패:", e);
-            }
-        };
-
-        window.clearAllDataConfirm = async function() {
+        window.clearAllDataConfirm = function() {
             if (songList.length === 0) return;
             if (confirm('정말로 모든 신청곡 목록을 전체 초기화하시겠습니까?')) {
-                try {
-                    const snapshot = await getDocs(songsColRef);
-                    const deletePromises = snapshot.docs.map(d => deleteDoc(d.ref));
-                    await Promise.all(deletePromises);
-                    showNotification('모든 신청곡이 초기화되었습니다.');
-                } catch(e) {
-                    console.error("전체 삭제 실패:", e);
-                }
+                songList = [];
+                saveDataAndBroadcast();
+                showNotification('모든 신청곡이 초기화되었습니다.');
             }
         };
 
         // --- DJ 휴가 관리 ---
-        window.toggleVacationToday = async function() {
+        window.toggleVacationToday = function() {
             if (!djVacation.isVacationToday) {
                 if (djVacation.used < djVacation.total) {
-                    const updated = { ...djVacation, used: djVacation.used + 1, isVacationToday: true };
-                    await setDoc(vacationDocRef, updated);
+                    djVacation.used += 1;
+                    djVacation.isVacationToday = true;
+                    saveDataAndBroadcast();
                     showNotification(`🏖️ 오늘은 DJ 휴가날로 설정되었습니다!`);
                 } else {
                     showNotification('⚠️ 이번 달 DJ 휴가권을 모두 사용했습니다!');
                 }
             } else {
-                const updated = { ...djVacation, isVacationToday: false };
-                await setDoc(vacationDocRef, updated);
+                djVacation.isVacationToday = false;
+                saveDataAndBroadcast();
                 showNotification('🎧 DJ 휴가 모드가 해제되어 다시 방송을 시작합니다!');
             }
         };
 
-        window.resetVacation = async function() {
-            const updated = { total: 3, used: 0, isVacationToday: false };
-            await setDoc(vacationDocRef, updated);
+        window.resetVacation = function() {
+            djVacation = { total: 3, used: 0, isVacationToday: false };
+            saveDataAndBroadcast();
             showNotification('🔄 DJ 휴가권이 매월 3회로 리셋되었습니다!');
         };
 
-        // --- STREAMING_CHUNK:Rendering UI components & dynamic lists... ---
+        // --- UI 렌더링 ---
         function renderVacationUI() {
             const countEl = document.getElementById('vacation-count');
             const dotsEl = document.getElementById('vacation-dots');
@@ -424,6 +363,8 @@
             const statusBadge = document.getElementById('broadcast-status-badge');
             const statusSubtext = document.getElementById('broadcast-status-subtext');
             const btnVacation = document.getElementById('btn-toggle-vacation');
+
+            if (!countEl || !dotsEl) return;
 
             const remaining = djVacation.total - djVacation.used;
             countEl.textContent = `${remaining} / ${djVacation.total} 회 남음`;
@@ -467,6 +408,8 @@
         function renderSongs() {
             const container = document.getElementById('song-list');
             const countEl = document.getElementById('song-count');
+            if (!container) return;
+
             countEl.textContent = songList.length;
 
             if (songList.length === 0) {
@@ -525,7 +468,7 @@
             `}).join('');
         }
 
-        // --- STREAMING_CHUNK:Defining utility functions & toasts... ---
+        // --- 유틸리티 ---
         window.copyToClipboard = function(text) {
             const textarea = document.createElement('textarea');
             textarea.value = text;
