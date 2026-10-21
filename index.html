@@ -553,7 +553,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     </div>
 
                     <div class="flex items-center gap-1.5 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-0 border-gray-100 flex-shrink-0">
-                        <button onclick="copyToClipboard('${escapeHtml(song.title)} - ${escapeHtml(song.artist)}')" 
+                        <button onclick="copyToClipboard('${escapeHtml(song.title)}${song.artist && song.artist !== '가수 미지정' ? ' - ' + escapeHtml(song.artist) : ''}')" 
                             class="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition flex items-center gap-1 shadow-sm" title="제목과 가수 복사">
                             <i class="fa-solid fa-copy"></i> 복사
                         </button>
